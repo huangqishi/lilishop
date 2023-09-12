@@ -1,6 +1,7 @@
 package cn.lili.modules.order.order.service;
 
 import cn.lili.modules.order.order.entity.dos.OrderItem;
+import cn.lili.modules.order.order.entity.dto.OrderItemOperationDTO;
 import cn.lili.modules.order.order.entity.enums.CommentStatusEnum;
 import cn.lili.modules.order.order.entity.enums.OrderComplaintStatusEnum;
 import cn.lili.modules.order.order.entity.enums.OrderItemAfterSaleStatusEnum;
@@ -66,4 +67,6 @@ public interface OrderItemService extends IService<OrderItem> {
      * @return 子订单
      */
     OrderItem getByOrderSnAndSkuId(String orderSn, String skuId);
+
+    List<OrderItem> waitOperationOrderItem(OrderItemOperationDTO orderItemOperationDTO);
 }

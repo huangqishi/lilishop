@@ -1,7 +1,6 @@
 package cn.lili.modules.page.serviceimpl;
 
 import cn.hutool.core.text.CharSequenceUtil;
-import cn.hutool.core.util.StrUtil;
 import cn.lili.common.enums.ClientTypeEnum;
 import cn.lili.common.enums.ResultCode;
 import cn.lili.common.enums.SwitchEnum;
@@ -78,7 +77,8 @@ public class PageDataServiceImpl extends ServiceImpl<PageDataMapper, PageData> i
         //如果页面为发布，则关闭其他页面，开启此页面
         if (pageData.getPageShow().equals(SwitchEnum.OPEN.name())) {
             LambdaUpdateWrapper<PageData> lambdaUpdateWrapper = Wrappers.lambdaUpdate();
-            lambdaUpdateWrapper.eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getNum, UserContext.getCurrentUser().getStoreId());
+            lambdaUpdateWrapper.eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getNum
+                    , UserContext.getCurrentUser().getStoreId());
             lambdaUpdateWrapper.eq(PageData::getPageType, pageData.getPageType());
             lambdaUpdateWrapper.eq(PageData::getPageClientType, pageData.getPageClientType());
             lambdaUpdateWrapper.set(PageData::getPageShow, SwitchEnum.CLOSE.name());
@@ -97,9 +97,17 @@ public class PageDataServiceImpl extends ServiceImpl<PageDataMapper, PageData> i
         if (pageData.getPageShow() != null && pageData.getPageShow().equals(SwitchEnum.OPEN.name())) {
             LambdaUpdateWrapper<PageData> lambdaUpdateWrapper = Wrappers.lambdaUpdate();
             lambdaUpdateWrapper.eq(CharSequenceUtil.isNotEmpty(pageData.getPageType()), PageData::getPageType, pageData.getPageType());
-            lambdaUpdateWrapper.eq(CharSequenceUtil.isNotEmpty(pageData.getPageClientType()), PageData::getPageClientType, pageData.getPageClientType());
+            lambdaUpdateWrapper.eq(CharSequenceUtil.isNotEmpty(pageData.getPageClientType()), PageData::getPageClientType,
+                    pageData.getPageClientType());
+
+            //如果是管理员，则判定页面num为null
+            if (UserContext.getCurrentUser().getRole().name().equals(UserEnums.MANAGER.name())) {
+                lambdaUpdateWrapper.isNull(PageData::getNum);
+            } else {
+                lambdaUpdateWrapper.eq(PageData::getNum, pageData.getNum());
+            }
+
             lambdaUpdateWrapper.set(PageData::getPageShow, SwitchEnum.CLOSE.name());
-            lambdaUpdateWrapper.set(StrUtil.isNotEmpty(pageData.getNum()), PageData::getNum, SwitchEnum.CLOSE.name());
             this.update(lambdaUpdateWrapper);
         } else {
             pageData.setPageShow(SwitchEnum.CLOSE.name());
@@ -108,8 +116,10 @@ public class PageDataServiceImpl extends ServiceImpl<PageDataMapper, PageData> i
         LambdaUpdateWrapper<PageData> lambdaUpdateWrapper = Wrappers.lambdaUpdate();
         lambdaUpdateWrapper.set(PageData::getPageData, pageData.getPageData());
         lambdaUpdateWrapper.eq(PageData::getId, pageData.getId());
-        lambdaUpdateWrapper.eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getPageType, PageEnum.STORE.name());
-        lambdaUpdateWrapper.eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getNum, UserContext.getCurrentUser().getStoreId());
+        lambdaUpdateWrapper.eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()),
+                PageData::getPageType, PageEnum.STORE.name());
+        lambdaUpdateWrapper.eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getNum,
+                UserContext.getCurrentUser().getStoreId());
         this.updateById(pageData);
         return pageData;
     }
@@ -118,8 +128,10 @@ public class PageDataServiceImpl extends ServiceImpl<PageDataMapper, PageData> i
     @Transactional(rollbackFor = Exception.class)
     public PageData releasePageData(String id) {
         PageData pageData = this.getOne(new LambdaQueryWrapper<PageData>()
-                .eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getPageType, PageEnum.STORE.name())
-                .eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getNum, UserContext.getCurrentUser().getStoreId())
+                .eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getPageType,
+                        PageEnum.STORE.name())
+                .eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getNum,
+                        UserContext.getCurrentUser().getStoreId())
                 .eq(PageData::getId, id));
         if (pageData == null) {
             throw new ServiceException(ResultCode.PAGE_NOT_EXIST);
@@ -153,8 +165,10 @@ public class PageDataServiceImpl extends ServiceImpl<PageDataMapper, PageData> i
     @Transactional(rollbackFor = Exception.class)
     public boolean removePageData(String id) {
         PageData pageData = this.getOne(new LambdaQueryWrapper<PageData>()
-                .eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getPageType, PageEnum.STORE.name())
-                .eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getNum, UserContext.getCurrentUser().getStoreId())
+                .eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getPageType,
+                        PageEnum.STORE.name())
+                .eq(CharSequenceUtil.equals(UserContext.getCurrentUser().getRole().name(), UserEnums.STORE.name()), PageData::getNum,
+                        UserContext.getCurrentUser().getStoreId())
                 .eq(PageData::getId, id));
         if (pageData == null) {
             throw new ServiceException(ResultCode.PAGE_NOT_EXIST);

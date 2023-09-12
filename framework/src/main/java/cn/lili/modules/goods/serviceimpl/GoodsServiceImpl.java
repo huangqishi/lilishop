@@ -133,7 +133,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         //获取商品ID列表
         List<String> list = this.baseMapper.getGoodsIdByStoreId(storeId);
         //下架店铺下的商品
-        updateGoodsMarketAble(list, GoodsStatusEnum.DOWN, "店铺关闭");
+        this.updateGoodsMarketAbleByStoreId(storeId, GoodsStatusEnum.DOWN, "店铺关闭");
 
         applicationEventPublisher.publishEvent(new TransactionCommitSendMQEvent("下架商品",
                 rocketmqCustomProperties.getGoodsTopic(), GoodsTagsEnum.DOWN.name(), JSONUtil.toJsonStr(list)));
@@ -170,7 +170,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         //检查商品
         this.checkGoods(goods);
         //向goods加入图片
-        if (goodsOperationDTO.getGoodsGalleryList().size() > 0 ) {
+        if (goodsOperationDTO.getGoodsGalleryList().size() > 0) {
             this.setGoodsGalleryParam(goodsOperationDTO.getGoodsGalleryList().get(0), goods);
         }
         //添加商品参数
@@ -188,7 +188,6 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         }
         this.generateEs(goods);
     }
-
 
 
     @Override
@@ -427,6 +426,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         LambdaUpdateWrapper<Goods> lambdaUpdateWrapper = Wrappers.lambdaUpdate();
         lambdaUpdateWrapper.set(Goods::getTemplateId, templateId);
         lambdaUpdateWrapper.in(Goods::getId, goodsIds);
+        cache.multiDel(goodsIds);
         return this.update(lambdaUpdateWrapper);
     }
 
@@ -493,6 +493,20 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
                         .eq(Goods::getMarketEnable, GoodsStatusEnum.UPPER.name()));
     }
 
+    @Override
+    public void categoryGoodsName(String categoryId) {
+        //获取分类下的商品
+        List<Goods> list = this.list(new LambdaQueryWrapper<Goods>().like(Goods::getCategoryPath, categoryId));
+        list.parallelStream().forEach(goods -> {
+            //移除redis中商品缓存
+            cache.remove(CachePrefix.GOODS.getPrefix() + goods.getId());
+        });
+    }
+
+    @Override
+    public void addGoodsCommentNum(Integer commentNum, String goodsId) {
+        this.baseMapper.addGoodsCommentNum(commentNum, goodsId);
+    }
 
     /**
      * 更新商品状态

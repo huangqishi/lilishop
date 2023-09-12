@@ -1,5 +1,7 @@
 package cn.lili.controller.order;
 
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.NumberUtil;
 import cn.lili.common.aop.annotation.PreventDuplicateSubmissions;
 import cn.lili.common.context.ThreadContextHolder;
 import cn.lili.common.enums.ResultCode;
@@ -7,7 +9,6 @@ import cn.lili.common.enums.ResultUtil;
 import cn.lili.common.security.OperationalJudgment;
 import cn.lili.common.security.context.UserContext;
 import cn.lili.common.vo.ResultMessage;
-import cn.lili.modules.kdBrid.service.KdNiaoService;
 import cn.lili.modules.member.entity.dto.MemberAddressDTO;
 import cn.lili.modules.member.service.StoreLogisticsService;
 import cn.lili.modules.order.order.entity.dto.OrderExportDTO;
@@ -16,6 +17,7 @@ import cn.lili.modules.order.order.entity.vo.OrderDetailVO;
 import cn.lili.modules.order.order.entity.vo.OrderSimpleVO;
 import cn.lili.modules.order.order.service.OrderPriceService;
 import cn.lili.modules.order.order.service.OrderService;
+import cn.lili.modules.system.service.LogisticsService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -63,10 +65,10 @@ public class OrderStoreController {
     private StoreLogisticsService storeLogisticsService;
 
     /**
-     * 快递鸟电子面单
+     * 快递
      */
     @Autowired
-    private KdNiaoService kdNiaoService;
+    private LogisticsService logisticsService;
 
 
     @ApiOperation(value = "查询订单列表")
@@ -103,7 +105,11 @@ public class OrderStoreController {
     @PutMapping(value = "/update/{orderSn}/price")
     public ResultMessage<Object> updateOrderPrice(@PathVariable String orderSn,
                                                   @NotNull(message = "订单价格不能为空") @RequestParam Double orderPrice) {
-        return ResultUtil.data(orderPriceService.updatePrice(orderSn, orderPrice));
+        if (NumberUtil.isGreater(Convert.toBigDecimal(orderPrice), Convert.toBigDecimal(0))) {
+            return ResultUtil.data(orderPriceService.updatePrice(orderSn, orderPrice));
+        } else {
+            return ResultUtil.error(ResultCode.ORDER_PRICE_ERROR);
+        }
     }
 
     @PreventDuplicateSubmissions
@@ -118,6 +124,14 @@ public class OrderStoreController {
                                           @NotNull(message = "发货单号不能为空") String logisticsNo,
                                           @NotNull(message = "请选择物流公司") String logisticsId) {
         return ResultUtil.data(orderService.delivery(orderSn, logisticsNo, logisticsId));
+    }
+
+    @PreventDuplicateSubmissions
+    @ApiOperation(value = "订单顺丰发货")
+    @ApiImplicitParam(name = "orderSn", value = "订单sn", required = true, dataType = "String", paramType = "path")
+    @PostMapping(value = "/{orderSn}/shunfeng/delivery")
+    public ResultMessage<Object> shunFengDelivery(@NotNull(message = "参数非法") @PathVariable String orderSn) {
+        return ResultUtil.data(orderService.shunFengDelivery(orderSn));
     }
 
     @PreventDuplicateSubmissions
@@ -147,6 +161,16 @@ public class OrderStoreController {
     @PutMapping(value = "/take/{orderSn}/{verificationCode}")
     public ResultMessage<Object> take(@PathVariable String orderSn, @PathVariable String verificationCode) {
         return ResultUtil.data(orderService.take(orderSn, verificationCode));
+    }
+
+    @PreventDuplicateSubmissions
+    @ApiOperation(value = "订单核验")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "verificationCode", value = "核验码", required = true, paramType = "path")
+    })
+    @PutMapping(value = "/take/{verificationCode}")
+    public ResultMessage<Object> take(@PathVariable String verificationCode) {
+        return ResultUtil.data(orderService.take(verificationCode));
     }
 
     @ApiOperation(value = "查询物流踪迹")
@@ -190,7 +214,7 @@ public class OrderStoreController {
             @ApiImplicitParam(name = "logisticsId", value = "物流公司", required = true, dataType = "String", paramType = "query")
     })
     public ResultMessage<Object> createElectronicsFaceSheet(@NotNull(message = "参数非法") @PathVariable String orderSn,
-                                                            @NotNull(message = "请选择物流公司") String logisticsId) throws Exception{
-        return ResultUtil.data(kdNiaoService.createElectronicsFaceSheet(orderSn,logisticsId));
+                                                            @NotNull(message = "请选择物流公司") String logisticsId) {
+        return ResultUtil.data(logisticsService.labelOrder(orderSn, logisticsId));
     }
 }

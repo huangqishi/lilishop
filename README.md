@@ -9,11 +9,12 @@
 ##### 交流 qq 1群 961316482（已满）
 ##### 交流 qq 2群 875294241（已满）
 ##### 交流 qq 3群 263785057（已满）
-##### 交流 qq 4群 674617534
+##### 交流 qq 4群 674617534 (已满)
+##### 交流 qq 5群 594675235 
 
 ##### 体验 公众号/小程序/APP 体验，扫描二维码
 
-![image-20210511171611793](https://pickmall.cn/assets/imgs/h5-qrcode.png)
+![image-20210511171611793](https://static.pickmall.cn/images/h5-qrcode.png)
 
 [![star](https://gitee.com/beijing_hongye_huicheng/lilishop/badge/star.svg?theme=dark)](https://gitee.com/beijing_hongye_huicheng/lilishop/stargazers)
 &nbsp;&nbsp;![github](https://img.shields.io/github/stars/hongyehuicheng/lilishop.svg?style=social&logo=#181717)
@@ -55,7 +56,7 @@ PS：手机验证码为 ‘111111’
 
 **商城 小程序/公众号/APP**：扫描二维码
 
-![image-20210511171611793](https://pickmall.cn/assets/imgs/h5-qrcode.png)
+![image-20210511171611793](https://static.pickmall.cn/images/h5-qrcode.png)
 
 ### 快速本地部署
 
@@ -73,25 +74,46 @@ PS：手机验证码为 ‘111111’
 
 
 #### 平台管理端功能
+ 
 
-![平台管理端功能](https://pickmall.cn/assets/imgs/other/managerList1.jpg)
+| 模块 <img width=80/> | 功能    |
+|--------------------|-----------------------------------------------------------------| 
+| 首页                 | 平台基础信息统计、待办事项                                                   |
+| 会员                 | 会员列表、评价列表、积分历史、会员资金、会员充值                                        |
+| 订单                 | 商品订单、虚拟订单、订单售后、订单投诉、售后原因维护、收款流水、退款流水                            |
+| 商品                 | 商品列表、商品审核、商品分类、商品品牌、商品规格、商品计量单位                                 |
+| 促销                 | 优惠券、券活动（每日&每月&每周&邀新 赠券）、秒杀活动、砍价活动、拼团活动、积分商品                     |
+| 店铺                 | 店铺管理、店铺审核、店铺结算、店铺对账                                             |
+| 运营                 | 楼层装修、分销商管理、文章管理、意见反馈、站内信、短信、搜索热词管理                              |
+| 统计                 | 会员统计、订单统计、流量统计、商品销量统计                                           |
+| 设置                 | 菜单管理、角色管理、部门管理、管理员管理、系统设置、行政地区管理、OSS管理、联合登陆、支付、物流公司、敏感词、验证码资源 |
 
 
 
 #### 卖家功能
 
-![商家端功能](https://pickmall.cn/assets/imgs/other/storeList.jpg)
+
+| 模块 <img width=80/> | 功能                            |
+|----|-------------------------------| 
+| 首页 | 店铺基础信息统计、待办事项、店铺公告            |
+| 商品 | 商品发布、商品列表、商品模板、店铺分类           |
+| 订单 | 商品订单、虚拟订单、订单评价、订单投诉、退款申请、退货申请 |
+| 财务 | 店铺对账、店铺结算、发票管理                |
+| 促销 | 优惠券、满额优惠、秒杀、拼团 、分销商品、分校订单     |
+| 统计 |单统计、流量统计、商品销量统计                                         |
+| 设置 | 配送公司、物流模板、店铺设置、店铺自提设置、PC装修、移动端装修、店员管理、部门管理、角色管理 |
+| 消息 | 站内信 |
 
 
 ### 商城前端功能展示
 
 #### 商城移动端
 
-<img src="https://pickmall.cn/assets/imgs/other/app.gif" alt="移动端功能展示" style="zoom:50%;" />
+<img src="https://static.pickmall.cn/images/other/app.gif" alt="移动端功能展示" style="zoom:50%;" />
 
 #### 平台管理端
 
-![管理端功能展示](https://pickmall.cn/assets/imgs/other/manager.gif)
+![管理端功能展示](https://static.pickmall.cn/images/other/manager.gif)
 
 
 ### 技术选型
@@ -164,4 +186,12 @@ PS：手机验证码为 ‘111111’
 ##### 交流 qq 1群 961316482（已满）
 ##### 交流 qq 2群 875294241（已满）
 ##### 交流 qq 3群 263785057（已满）
-##### 交流 qq 4群 674617534
+##### 交流 qq 4群 674617534（已满）
+##### 交流 qq 5群 594675235 
+
+### 附录
+有人有自己的学习视频、学习记录文档、希望宣传关联开源项目等均可以私聊仓库所有者。
+
+类似：
+
+清晨敲代码同学的分析: https://blog.csdn.net/vaevaevae233/category_12103567.html

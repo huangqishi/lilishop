@@ -11,16 +11,16 @@ import cn.lili.common.security.enums.UserEnums;
 import cn.lili.common.security.token.Token;
 import cn.lili.common.security.token.TokenUtil;
 import cn.lili.common.security.token.base.AbstractTokenGenerate;
+import cn.lili.modules.member.entity.dos.Clerk;
 import cn.lili.modules.member.entity.dos.Member;
+import cn.lili.modules.member.entity.vo.StoreUserMenuVO;
+import cn.lili.modules.member.service.ClerkService;
+import cn.lili.modules.member.service.StoreMenuRoleService;
 import cn.lili.modules.store.entity.dos.Store;
 import cn.lili.modules.store.service.StoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import cn.lili.modules.member.entity.dos.Clerk;
-import cn.lili.modules.member.entity.vo.StoreUserMenuVO;
-import cn.lili.modules.member.service.ClerkService;
-import cn.lili.modules.member.service.StoreMenuRoleService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,11 +57,11 @@ public class StoreTokenGenerate extends AbstractTokenGenerate<Member> {
         if (clerk == null) {
             throw new ServiceException(ResultCode.CLERK_NOT_FOUND_ERROR);
         }
-        if (!clerk.getStatus()) {
+        if (Boolean.FALSE.equals(clerk.getStatus())) {
             throw new ServiceException(ResultCode.CLERK_DISABLED_ERROR);
         }
         //获取当前用户权限
-        List<StoreUserMenuVO> storeUserMenuVOS = storeMenuRoleService.findAllMenu(clerk.getId(),member.getId());
+        List<StoreUserMenuVO> storeUserMenuVOS = storeMenuRoleService.findAllMenu(clerk.getId(), member.getId());
         //缓存权限列表
         cache.put(CachePrefix.PERMISSION_LIST.getPrefix(UserEnums.STORE) + member.getId(), this.permissionList(storeUserMenuVOS));
         //查询店铺信息
@@ -69,16 +69,25 @@ public class StoreTokenGenerate extends AbstractTokenGenerate<Member> {
         if (store == null) {
             throw new ServiceException(ResultCode.STORE_NOT_OPEN);
         }
-        AuthUser authUser = new AuthUser(member.getUsername(), member.getId(), UserEnums.STORE, member.getNickName(), clerk.getIsSuper(), clerk.getId(),store.getStoreLogo());
-
-        authUser.setStoreId(store.getId());
-        authUser.setStoreName(store.getStoreName());
-        return tokenUtil.createToken(member.getUsername(), authUser, longTerm, UserEnums.STORE);
+        //构建对象
+        AuthUser authUser = AuthUser.builder()
+                .username(member.getUsername())
+                .id(member.getId())
+                .role(UserEnums.STORE)
+                .nickName(member.getNickName())
+                .isSuper(clerk.getIsSuper())
+                .clerkId(clerk.getId())
+                .face(store.getStoreLogo())
+                .storeId(store.getId())
+                .storeName(store.getStoreName())
+                .longTerm(longTerm)
+                .build();
+        return tokenUtil.createToken(authUser);
     }
 
     @Override
     public Token refreshToken(String refreshToken) {
-        return tokenUtil.refreshToken(refreshToken, UserEnums.STORE);
+        return tokenUtil.refreshToken(refreshToken);
     }
 
     /**
@@ -87,7 +96,7 @@ public class StoreTokenGenerate extends AbstractTokenGenerate<Member> {
      * @param userMenuVOList
      * @return
      */
-    private Map<String, List<String>> permissionList(List<StoreUserMenuVO> userMenuVOList) {
+    public Map<String, List<String>> permissionList(List<StoreUserMenuVO> userMenuVOList) {
         Map<String, List<String>> permission = new HashMap<>(2);
 
         List<String> superPermissions = new ArrayList<>();
@@ -145,14 +154,12 @@ public class StoreTokenGenerate extends AbstractTokenGenerate<Member> {
         superPermissions.add("/store/passport/login*");
 
 
-
         //店铺设置
         queryPermissions.add("/store/settings/storeSettings*");
         //文章接口
         queryPermissions.add("/store/other/article*");
         //首页统计
         queryPermissions.add("/store/statistics/index*");
-
 
 
     }

@@ -156,6 +156,10 @@ public class AfterSaleServiceImpl extends ServiceImpl<AfterSaleMapper, AfterSale
 
         afterSaleApplyVO.setAccountType(order.getPaymentMethod());
         afterSaleApplyVO.setApplyRefundPrice(CurrencyUtil.div(orderItem.getFlowPrice(), orderItem.getNum()));
+        //如果已经退货或者退款过，则返回最大售后数量重新设置
+        if (orderItem.getReturnGoodsNumber() != null) {
+            afterSaleApplyVO.setNum(orderItem.getNum() - orderItem.getReturnGoodsNumber());
+        }
         afterSaleApplyVO.setNum(orderItem.getNum());
         afterSaleApplyVO.setGoodsId(orderItem.getGoodsId());
         afterSaleApplyVO.setGoodsName(orderItem.getGoodsName());
@@ -269,15 +273,15 @@ public class AfterSaleServiceImpl extends ServiceImpl<AfterSaleMapper, AfterSale
 
         //根据售后单号获取售后单
         AfterSale afterSale = OperationalJudgment.judgment(this.getBySn(afterSaleSn));
-        String str=storeDetailService.getStoreDetail(afterSale.getStoreId()).getSalesConsigneeMobile();
-        return logisticsService.getLogistic(afterSale.getMLogisticsCode(), afterSale.getMLogisticsNo(), str.substring(str.length()-4));
+        return logisticsService.getLogisticTrack(afterSale.getMLogisticsCode(), afterSale.getMLogisticsNo(),
+                storeDetailService.getStoreDetail(afterSale.getStoreId()).getSalesConsigneeMobile());
     }
 
     @Override
-    @AfterSaleLogPoint(sn = "#afterSaleSn", description = "'售后-商家收货:单号['+#afterSaleSn+']" +
-            ",处理结果['+serviceStatus='PASS'?'商家收货':'商家拒收'+']'")
-    @SystemLogPoint(description = "售后-商家收货", customerLog = "'售后-商家收货:单号['+#afterSaleSn+']" +
-            ",处理结果['+serviceStatus='PASS'?'商家收货':'商家拒收'+']'")
+    @AfterSaleLogPoint(sn = "#afterSaleSn", description = "#serviceStatus.equals('PASS')?" +
+            "'售后-商家收货:单号['+#afterSaleSn+'],处理结果[商家收货]':'售后-商家收货:单号['+#afterSaleSn+'],处理结果[商家拒收],原因['+#remark+']'")
+    @SystemLogPoint(description = "售后-商家收货", customerLog = "#serviceStatus.equals('PASS')?" +
+            "'售后-商家收货:单号['+#afterSaleSn+'],处理结果[商家收货]':'售后-商家收货:单号['+#afterSaleSn+'],处理结果[商家拒收],原因['+#remark+']'")
     @Transactional(rollbackFor = Exception.class)
     public AfterSale storeConfirm(String afterSaleSn, String serviceStatus, String remark) {
         //根据售后单号获取售后单
@@ -455,7 +459,10 @@ public class AfterSaleServiceImpl extends ServiceImpl<AfterSaleMapper, AfterSale
         switch (afterSaleStatusEnum) {
             //判断当前售后的状态---申请中
             case APPLY: {
+//                买家申请售后时已经输入了订单售后数量，这里不需要(+x)处理
                 orderItem.setReturnGoodsNumber(orderItem.getReturnGoodsNumber() + afterSale.getNum());
+                //修改orderItem订单
+                this.updateOrderItem(orderItem);
                 break;
             }
 
@@ -464,13 +471,13 @@ public class AfterSaleServiceImpl extends ServiceImpl<AfterSaleMapper, AfterSale
             case BUYER_CANCEL:
             case SELLER_TERMINATION: {
                 orderItem.setReturnGoodsNumber(orderItem.getReturnGoodsNumber() - afterSale.getNum());
+                //修改orderItem订单
+                this.updateOrderItem(orderItem);
                 break;
             }
             default:
                 break;
         }
-        //修改orderItem订单
-        this.updateOrderItem(orderItem);
     }
 
 
@@ -513,7 +520,8 @@ public class AfterSaleServiceImpl extends ServiceImpl<AfterSaleMapper, AfterSale
                 break;
             case RETURN_GOODS:
                 //是否为有效状态
-                boolean availableStatus = CharSequenceUtil.equalsAny(order.getOrderStatus(), OrderStatusEnum.DELIVERED.name(), OrderStatusEnum.COMPLETED.name());
+                boolean availableStatus = CharSequenceUtil.equalsAny(order.getOrderStatus(), OrderStatusEnum.DELIVERED.name(),
+                        OrderStatusEnum.COMPLETED.name());
                 if (!PayStatusEnum.PAID.name().equals(order.getPayStatus()) && availableStatus) {
                     throw new ServiceException(ResultCode.AFTER_SALES_BAN);
                 }
