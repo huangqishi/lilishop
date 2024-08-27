@@ -196,7 +196,8 @@ public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements
                     if (skuIPage == null || CollUtil.isEmpty(skuIPage.getRecords())) {
                         break;
                     }
-                    List<PromotionGoods> skuValidPromotions = promotionGoodsService.findSkuValidPromotions(skuIPage.getRecords());
+                    List<String> skuIds = skuIPage.getRecords().stream().map(GoodsSku::getId).collect(Collectors.toList());
+                    List<PromotionGoods> skuValidPromotions = promotionGoodsService.findSkuValidPromotions(skuIds);
 
                     List<String> brandIds = new ArrayList<>();
 
@@ -248,7 +249,9 @@ public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements
                                         (CharSequenceUtil.isNotEmpty(j.getSkuId()) && j.getSkuId().equals(goodsSku.getId())) ||
                                                 (j.getScopeType().equals(PromotionsScopeTypeEnum.ALL.name()) && j.getStoreId().equals("0")) ||
                                                 (j.getScopeType().equals(PromotionsScopeTypeEnum.ALL.name()) && j.getStoreId().equals(esGoodsIndex.getStoreId())) ||
-                                                (j.getScopeType().equals(PromotionsScopeTypeEnum.PORTION_GOODS_CATEGORY.name()) && j.getScopeId().contains(goodsSku.getCategoryPath())))
+                                                (j.getScopeType().equals(PromotionsScopeTypeEnum.PORTION_GOODS_CATEGORY.name()) && j.getStoreId().equals("0") && j.getScopeId().contains(goodsSku.getCategoryPath()))||
+                                                (j.getScopeType().equals(PromotionsScopeTypeEnum.PORTION_GOODS_CATEGORY.name()) && j.getStoreId().equals(goodsSku.getStoreId()) && j.getScopeId().contains(goodsSku.getCategoryPath()))
+                                )
                                 .collect(Collectors.toList());
                         if (CollUtil.isNotEmpty(promotionGoods)) {
                             esGoodsIndex.setPromotionMapJson(JSONUtil.toJsonStr(promotionService.wrapperPromotionMapList(promotionGoods)));
@@ -368,7 +371,6 @@ public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements
             keywordsList.forEach(item -> customWordsArrayList.add(new CustomWords(item)));
             //这里采用先批量删除再插入的方法，故意这么做。否则需要挨个匹配是否存在，性能消耗更大
             if (CollUtil.isNotEmpty(customWordsArrayList)) {
-                customWordsService.deleteBathByName(keywordsList);
                 customWordsService.insertBatchCustomWords(customWordsArrayList);
             }
         } catch (Exception e) {
